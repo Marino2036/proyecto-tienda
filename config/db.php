@@ -1,10 +1,12 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-$host = getenv("DB_HOST") ?: "127.0.0.1";
-$usuario = getenv("DB_USER") ?: "root";
-$contrasena = getenv("DB_PASS") ?: "root";
-$basedatos = getenv("DB_NAME") ?: "tienda";
-$puerto = getenv("DB_PORT") ?: 3306;
+$host = "acela.proxy.rlwy.net";
+$usuario = "root";
+$contrasena = "NmrdwmoHIYgGLWQhEBrUKZolSCtvfPrl";
+$basedatos = "railway";
+$puerto = 28552;
 
 $conexion = new mysqli(
     $host,
