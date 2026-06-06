@@ -19,7 +19,7 @@ http://localhost/proyecto
 CUANDO LO SUBAS A LA NUBE:
 https://tu-proyecto.onrender.com
 */
-$baseUrl = "https://proyecto-tienda.onrender.com";
+$baseUrl = "https://proyecto-tienda-aieq.onrender.com";
 
 $busqueda = trim($_GET["busqueda"] ?? "");
 
