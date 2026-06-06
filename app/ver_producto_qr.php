@@ -149,7 +149,7 @@ body{
             </div>
 
             <div class="footer">
-                Información del producto actualizada desde la tienda
+                
             </div>
         </div>
 
