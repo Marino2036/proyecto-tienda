@@ -14,6 +14,48 @@ if (!$resultado || $resultado->num_rows === 0) {
 }
 
 $producto = $resultado->fetch_assoc();
+
+// Registrar visita por QR
+$ip = $_SERVER["REMOTE_ADDR"] ?? "Desconocida";
+$userAgent = $_SERVER["HTTP_USER_AGENT"] ?? "Desconocido";
+$protocolo = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off") ? "https" : "http";
+$urlVisitada = $protocolo . "://" . ($_SERVER["HTTP_HOST"] ?? "") . ($_SERVER["REQUEST_URI"] ?? "");
+
+$sqlBitacora = "
+    INSERT INTO bitacora_qr
+    (producto_id, producto_nombre, fecha, hora, ip, user_agent, url_visitada)
+    VALUES (?, ?, CURDATE(), CURTIME(), ?, ?, ?)
+";
+
+$stmtBitacora = $conexion->prepare($sqlBitacora);
+if ($stmtBitacora) {
+    $productoId = (int)$producto["id"];
+    $productoNombre = $producto["nombre"] ?? "Sin nombre";
+    $stmtBitacora->bind_param("issss", $productoId, $productoNombre, $ip, $userAgent, $urlVisitada);
+    $stmtBitacora->execute();
+    $stmtBitacora->close();
+}
+
+function obtenerImagenBase64($imagenBlob) {
+    if (empty($imagenBlob)) {
+        return "";
+    }
+
+    $mime = "image/jpeg";
+
+    if (class_exists("finfo")) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mimeDetectado = $finfo->buffer($imagenBlob);
+
+        if (!empty($mimeDetectado)) {
+            $mime = $mimeDetectado;
+        }
+    }
+
+    return "data:" . $mime . ";base64," . base64_encode($imagenBlob);
+}
+
+$imagenBase64 = obtenerImagenBase64($producto["imagen"] ?? "");
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -119,9 +161,9 @@ body{
     <div class="card">
 
         <div class="card-img">
-            <?php if (!empty($producto["imagen"])) { ?>
+            <?php if ($imagenBase64 !== "") { ?>
                 <img
-                    src="data:image/jpeg;base64,<?php echo base64_encode($producto['imagen']); ?>"
+                    src="<?php echo $imagenBase64; ?>"
                     alt="<?php echo htmlspecialchars($producto["nombre"]); ?>"
                 >
             <?php } else { ?>

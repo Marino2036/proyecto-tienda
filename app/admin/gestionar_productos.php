@@ -12,13 +12,6 @@ if (!isset($_SESSION["rol"]) || $_SESSION["rol"] !== "admin") {
     exit();
 }
 
-/*
-LOCAL:
-http://localhost/proyecto
-
-CUANDO LO SUBAS A LA NUBE:
-https://tu-proyecto.onrender.com
-*/
 $baseUrl = "https://proyecto-tienda-aieq.onrender.com";
 
 $busqueda = trim($_GET["busqueda"] ?? "");
@@ -46,6 +39,25 @@ if ($tipos !== "") {
 $stmt->execute();
 $resultado = $stmt->get_result();
 $totalProductos = $resultado ? $resultado->num_rows : 0;
+
+function obtenerImagenBase64($imagenBlob) {
+    if (empty($imagenBlob)) {
+        return "";
+    }
+
+    $mime = "image/jpeg";
+
+    if (class_exists("finfo")) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mimeDetectado = $finfo->buffer($imagenBlob);
+
+        if (!empty($mimeDetectado)) {
+            $mime = $mimeDetectado;
+        }
+    }
+
+    return "data:" . $mime . ";base64," . base64_encode($imagenBlob);
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -96,6 +108,30 @@ $totalProductos = $resultado ? $resultado->num_rows : 0;
 .btn-ver-qr:hover{
     background:#2563eb;
 }
+
+.img-sin-foto{
+    width:95px;
+    height:70px;
+    border:1px dashed #cbd5e1;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#64748b;
+    font-size:12px;
+    background:#f8fafc;
+    text-align:center;
+}
+
+.miniatura-tabla{
+    width:95px;
+    height:70px;
+    object-fit:contain;
+    border-radius:14px;
+    border:1px solid #e5e7eb;
+    background:white;
+    padding:6px;
+}
 </style>
 </head>
 
@@ -129,7 +165,7 @@ $totalProductos = $resultado ? $resultado->num_rows : 0;
         <div class="seccion-encabezado">
             <div>
                 <h2>Listado de productos</h2>
-                <p>Cada producto genera su propio QR automáticamente</p>
+                <p>Cada producto genera su propio QR automáticamente.</p>
             </div>
         </div>
 
@@ -169,9 +205,10 @@ $totalProductos = $resultado ? $resultado->num_rows : 0;
                 <?php if ($resultado && $resultado->num_rows > 0) { ?>
                     <?php $indice = 1; ?>
 
-                    <?php while ($fila = $resultado->fetch_assoc()) { 
+                    <?php while ($fila = $resultado->fetch_assoc()) {
                         $productoId = (int)$fila["id"];
                         $urlQR = $baseUrl . "/app/ver_producto_qr.php?id=" . $productoId;
+                        $imagenBase64 = obtenerImagenBase64($fila["imagen"] ?? "");
                     ?>
 
                     <tr>
@@ -200,11 +237,15 @@ $totalProductos = $resultado ? $resultado->num_rows : 0;
                         </td>
 
                         <td>
-                            <img
-                                class="miniatura-tabla"
-                                src="data:image/jpeg;base64,<?php echo base64_encode($fila['imagen']); ?>"
-                                alt="Imagen de <?php echo htmlspecialchars($fila["nombre"]); ?>"
-                            >
+                            <?php if ($imagenBase64 !== "") { ?>
+                                <img
+                                    class="miniatura-tabla"
+                                    src="<?php echo $imagenBase64; ?>"
+                                    alt="Imagen de <?php echo htmlspecialchars($fila["nombre"]); ?>"
+                                >
+                            <?php } else { ?>
+                                <div class="img-sin-foto">Sin imagen</div>
+                            <?php } ?>
                         </td>
 
                         <td>
